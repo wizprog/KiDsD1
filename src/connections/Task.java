@@ -2,18 +2,20 @@ package connections;
 
 import interfaces.TaskJob;
 
+enum Type{
+	WEB,
+	DIRECTORY
+}
+
 public class Task implements TaskJob{
 	
-	enum Type{
-		WEB,
-		DIRECTORY
-	}
-	
 	Type myType;
+	String task_name_destination;
 
-	public Task(Type myType) {
+	public Task(Type myType, String task_name_destination) {
 		super();
 		this.myType = myType;
+		this.task_name_destination = task_name_destination;
 	}
 
 	@Override

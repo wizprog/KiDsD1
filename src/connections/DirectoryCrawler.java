@@ -20,17 +20,29 @@ public class DirectoryCrawler implements Runnable {
 		this.files = files;
 	}
 
-
-
 	@Override
 	public void run() {
-		Stack<Integer> stack = new Stack<Integer>(); 
+		Stack<String> stack = new Stack<String>(); 
 		while(true) {
 			try {
 				File dir = new File(files[0]);
 				for (File f: dir.listFiles()) {
 					if(f.getName().contains("")) {
-						
+						queue.put(new Task(Type.DIRECTORY, f.getName()));
+					}else {
+						stack.push(f.getName());
+					}
+				}
+				
+				while(!stack.empty()) {
+					String fileName = stack.pop();
+					File help = new File(fileName);
+					for (File f: dir.listFiles()) {
+						if(f.getName().contains("")) {
+							queue.put(new Task(Type.DIRECTORY, f.getName()));
+						}else {
+							stack.push(f.getName());
+						}
 					}
 				}
 				
