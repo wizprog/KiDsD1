@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 
 import javax.xml.ws.handler.MessageContext.Scope;
 
+import components.WebScanner;
 import interfaces.TaskJob;
 
 enum Type {
@@ -15,12 +16,17 @@ public class Task implements TaskJob {
 
 	Type myType;
 	String task_name_destination;
-	Callable<Map<String,Integer>> res;
+	Callable<Map<String,Integer>> scannerPtr;
 
 	public Task(Type myType, String task_name_destination) {
 		super();
 		this.myType = myType;
 		this.task_name_destination = task_name_destination;
+		
+		//in discussion
+		if (this.myType.equals(Type.WEB)) {
+			scannerPtr = new WebScanner();
+		}
 	}
 
 	@Override
@@ -47,6 +53,10 @@ public class Task implements TaskJob {
 	public void setQuery(String q) {
 		task_name_destination=q;
 		
+	}
+	
+	public Callable<Map<String,Integer>> getScannerPtr(){
+		return this.scannerPtr;
 	}
 
 }
