@@ -20,7 +20,7 @@ public class CLI {
 			long crawler_sleep_time = 0;
 			long file_size_limit = 0;
 			long hop_count = 0;
-			long refresh_time = 0; 
+			long refresh_time = 0;
 			
 			Map<String, Integer> dictionary = new HashMap<String, Integer>();
 			dictionary.put("ad", 0);
