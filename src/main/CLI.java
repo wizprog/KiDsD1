@@ -1,5 +1,7 @@
 package main;
 
+//Author igor
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
