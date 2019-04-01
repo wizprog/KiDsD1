@@ -7,11 +7,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import components.WebScannerThreadPool;
+import connections.DirectoryCrawler;
+import connections.JobDispatcher;
+import connections.JobQueue;
+import connections.Task;
+
 public class CLI {
 
 	public static void main(String[] args) {
 		File file = null;
 		Scanner scanner = null;
+		Scanner inputScanner = new Scanner(System.in);
 
 		try {
 			file = new File("app.properties");
@@ -59,9 +66,55 @@ public class CLI {
 			}
 			System.out.println("Config file reading finished...");
 			
+			JobQueue<Task> jbQueue = new JobQueue<Task>(); 
+			
+			JobDispatcher jd = new JobDispatcher(jbQueue);
+			Thread jobDispatcherThread = new Thread(jd);
+			
+			DirectoryCrawler dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue);
+			Thread directoryCrawlerThread = new Thread(dcThread);
+			
+			//Thread pools
+			WebScannerThreadPool wsPool = new WebScannerThreadPool();
+			Thread webScannerThreadPoolThread = new Thread(wsPool);
+			
+			
+			Thread fileScannerThreadPoolThread = new Thread();
+			
+			
+			//Starting threads
+			jobDispatcherThread.start();
+			directoryCrawlerThread.start();
+			webScannerThreadPoolThread.start();
+			fileScannerThreadPoolThread.start();
+			
+			while(true) {
+				String newTask = inputScanner.nextLine();
+				if (dictionary.containsKey(newTask)) {
+					switch (dictionary.get(newTask)) {
+					case 0:
+						break;
+					case 1:
+						break;
+					case 2:
+						break;
+					case 3:
+						break;
+					case 4:
+						break;
+					case 5:
+						break;
+					case 6:
+						System.exit(0);
+						break;
+					default:
+						break;
+					}
+				}
+			}
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 	}

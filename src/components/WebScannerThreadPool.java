@@ -14,6 +14,7 @@ public class WebScannerThreadPool implements Runnable {
 	@Override
 	public void run() {
 		ex = Executors.newFixedThreadPool(10);
+		System.out.println("Web Scanner Thread Pool started...");
 		while(true) {
 			
 		}

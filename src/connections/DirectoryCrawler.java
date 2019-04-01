@@ -14,36 +14,42 @@ public class DirectoryCrawler implements Runnable {
 		this.sleep_time = sleep_time;
 	}	
 
-	public DirectoryCrawler(long sleep_time, String[] files) {
+	public DirectoryCrawler(long sleep_time, String files, JobQueue<Task> queue) {
 		super();
 		this.sleep_time = sleep_time;
-		this.files = files;
+		this.files = files.split(",");
+		this.queue = queue;
 	}
 
 	@Override
 	public void run() {
 		Stack<String> stack = new Stack<String>(); 
+		System.out.println("Directory crawler started...");
 		while(true) {
 			try {
 				File dir = new File(files[0]);
-				for (File f: dir.listFiles()) {
-					if(f.getName().contains("")) {
-						queue.put(new Task(Type.DIRECTORY, f.getName()));
-					}else {
-						stack.push(f.getName());
-					}
-				}
-				
-				while(!stack.empty()) {
-					String fileName = stack.pop();
-					File help = new File(fileName);
+				if (dir.exists()) {
+					
 					for (File f: dir.listFiles()) {
 						if(f.getName().contains("")) {
-							queue.put(new Task(Type.DIRECTORY, f.getName()));
+							queue.put(new Task(Type.DIRECTORY, f.getName(), null));
 						}else {
 							stack.push(f.getName());
 						}
 					}
+					
+					while(!stack.empty()) {
+						String fileName = stack.pop();
+						File help = new File(fileName);
+						for (File f: dir.listFiles()) {
+							if(f.getName().contains("")) {
+								queue.put(new Task(Type.DIRECTORY, f.getName(), null));
+							}else {
+								stack.push(f.getName());
+							}
+						}
+					}
+					
 				}
 				
 				Thread.sleep(this.sleep_time);

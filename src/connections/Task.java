@@ -18,14 +18,14 @@ public class Task implements TaskJob {
 	String task_name_destination;
 	Callable<Map<String,Integer>> scannerPtr;
 
-	public Task(Type myType, String task_name_destination) {
+	public Task(Type myType, String task_name_destination, Integer hop_count) {
 		super();
 		this.myType = myType;
 		this.task_name_destination = task_name_destination;
 		
 		//in discussion
 		if (this.myType.equals(Type.WEB)) {
-			scannerPtr = new WebScanner();
+			scannerPtr = new WebScanner(hop_count);
 		}
 	}
 
