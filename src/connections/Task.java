@@ -1,10 +1,10 @@
 package connections;
 
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 
-import javax.xml.ws.handler.MessageContext.Scope;
-
+import components.FileScanner;
 import components.WebScanner;
 import interfaces.TaskJob;
 
@@ -26,6 +26,17 @@ public class Task implements TaskJob {
 		//in discussion
 		if (this.myType.equals(Type.WEB)) {
 			scannerPtr = new WebScanner(hop_count);
+		}
+	}
+	
+	public Task(Type myType, Stack<String> task_name_destination, Integer hop_count) {
+		super();
+		this.myType = myType;
+		//in discussion
+		if (this.myType.equals(Type.WEB)) {
+			scannerPtr = new WebScanner(hop_count);
+		}else {
+			scannerPtr = new FileScanner(task_name_destination);
 		}
 	}
 

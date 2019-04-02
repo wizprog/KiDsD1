@@ -1,15 +1,16 @@
 package components;
 
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 
 public class FileScanner implements Callable<Map<String,Integer>> {
 	
-	String directory_destination;
+	Stack<String> directoryUrls; 
 
-	public FileScanner(String directory_destination) {
+	public FileScanner(Stack<String> directoryUrls) {
 		super();
-		this.directory_destination = directory_destination;
+		this.directoryUrls = directoryUrls;
 	}
 
 	@Override
