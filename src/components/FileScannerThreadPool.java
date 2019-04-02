@@ -8,13 +8,13 @@ import java.util.concurrent.Semaphore;
 
 import connections.Task;
 
-public class WebScannerThreadPool implements Runnable {
-	
+public class FileScannerThreadPool implements Runnable {
+
 	ExecutorService ex;
 	
 	Semaphore semaphore;
 	
-	public WebScannerThreadPool() {
+	public FileScannerThreadPool() {
 		super();
 		this.semaphore = new Semaphore(0);
 	}
@@ -22,7 +22,7 @@ public class WebScannerThreadPool implements Runnable {
 	@Override
 	public void run() {
 		ex = Executors.newFixedThreadPool(10);
-		System.out.println("Web Scanner Thread Pool started...");
+		System.out.println("File Scanner Thread Pool started...");
 		while(true) {
 			try {
 				
@@ -49,5 +49,4 @@ public class WebScannerThreadPool implements Runnable {
 	public void stop() {
 		ex.shutdown();
 	}
-
 }

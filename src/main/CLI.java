@@ -12,6 +12,7 @@ import connections.DirectoryCrawler;
 import connections.JobDispatcher;
 import connections.JobQueue;
 import connections.Task;
+import exceptions.NonExistingCommand;
 
 public class CLI {
 
@@ -90,25 +91,27 @@ public class CLI {
 			
 			while(true) {
 				String newTask = inputScanner.nextLine();
-				if (dictionary.containsKey(newTask)) {
+				String tokens[] = newTask.split(" ");
+				if (dictionary.containsKey(tokens[0])) {
 					switch (dictionary.get(newTask)) {
-					case 0:
+					case 0:  //adding new directory to DirectoryCrawler
+						dcThread.putDirectoryCorpusDestination(tokens[1]);
 						break;
-					case 1:
+					case 1:  //add new Web page to WebScannerPool
 						break;
-					case 2:
+					case 2:  //get result from Result retriever, blocking next request unitl it gets the result
 						break;
-					case 3:
+					case 3:  //  ,not blocking next request unitl it gets the result
 						break;
-					case 4:
+					case 4:  //cws - clear web summary, remove from result retriever web search info
 						break;
-					case 5:
+					case 5:  //cfs - clear file summary, remove from result retriever file search info
 						break;
-					case 6:
+					case 6:  //stoping the system
 						System.exit(0);
 						break;
 					default:
-						break;
+						throw new NonExistingCommand("Not Existing Command");
 					}
 				}
 			}
