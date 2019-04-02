@@ -25,7 +25,7 @@ public class Task implements TaskJob {
 		
 		//in discussion
 		if (this.myType.equals(Type.WEB)) {
-			scannerPtr = new WebScanner(hop_count);
+			scannerPtr = new WebScanner(hop_count, task_name_destination);
 		}
 	}
 	
@@ -34,7 +34,7 @@ public class Task implements TaskJob {
 		this.myType = myType;
 		//in discussion
 		if (this.myType.equals(Type.WEB)) {
-			scannerPtr = new WebScanner(hop_count);
+			scannerPtr = new WebScanner(hop_count, task_name_destination.pop());
 		}else {
 			scannerPtr = new FileScanner(task_name_destination);
 		}

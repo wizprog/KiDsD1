@@ -54,11 +54,15 @@ public class DirectoryCrawler implements Runnable {
 	@Override
 	public void run() {
 		Stack<String> stack = new Stack<String>();
+		Stack<String> taskDocuments = new Stack<String>();
 		String directorySearch;
+		
+		long currentTaskSize = 0;
 		System.out.println("Directory crawler started...");
 		while(true) {
 			try {
 				directorySearch = null;
+				currentTaskSize = 0;
 				
 				semaphore.acquire();
 				if ( !this.directoryStack.empty() ) {
@@ -80,22 +84,49 @@ public class DirectoryCrawler implements Runnable {
 							boolean createTask = (lastModOld < lastModNew);
 							
 							if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
-								queue.put(new Task(Type.DIRECTORY, f.getName(), null));
+								
+								if (currentTaskSize >= minimumFileSizeBatch && currentTaskSize!=0) {
+									queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
+								}
+								else {
+									currentTaskSize += directorySize(f);
+									taskDocuments.push(f.getName());	
+								}
 							}else {
 								stack.push(f.getName());
 							}
 						}
 						
+						//eventualy put everything in one while
 						while(!stack.empty()) {
 							String fileName = stack.pop();
 							File help = new File(fileName);
 							for (File f: dir.listFiles()) {
-								if(f.getName().startsWith(this.file_corpus_prefix)) {
-									queue.put(new Task(Type.DIRECTORY, f.getName(), null));
+								//evaluating last modified
+								long lastModNew = f.lastModified();
+								long lastModOld = -1;
+								if (lastModified.containsKey(f.getName())) lastModOld = lastModified.get(f.getName());
+								else lastModified.put(f.getName(), f.lastModified());
+								boolean createTask = (lastModOld < lastModNew);
+								
+								if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
+									
+									if (currentTaskSize >= minimumFileSizeBatch && currentTaskSize!=0) {
+										queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
+									}
+									else {
+										currentTaskSize += directorySize(f);
+										taskDocuments.push(f.getName());	
+									}
 								}else {
 									stack.push(f.getName());
 								}
 							}
+						}
+						
+						//if currentTaskSize < minimumFileSizeBatch and not 0
+						if (currentTaskSize != 0) {
+							queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
 						}
 					} 
 					else {
