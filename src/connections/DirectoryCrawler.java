@@ -1,6 +1,8 @@
 package connections;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Semaphore;
 
@@ -13,21 +15,18 @@ public class DirectoryCrawler implements Runnable {
 	JobQueue<Task> queue;
 	Stack<String> directoryStack;
 	private final Semaphore semaphore;
-	
-	public DirectoryCrawler(long sleep_time) {
-		super();
-		this.sleep_time = sleep_time;
-		this.directoryStack = new Stack<String>();
-		semaphore = new Semaphore(0);
-	}	
+	private  Map<String, Long> lastModified;
+	private long minimumFileSizeBatch;
 
-	public DirectoryCrawler(long sleep_time, String file_corpus_prefix, JobQueue<Task> queue) {
+	public DirectoryCrawler(long sleep_time, String file_corpus_prefix, JobQueue<Task> queue, long minimumFileSizeBatch) {
 		super();
 		this.sleep_time = sleep_time;
 		this.file_corpus_prefix = file_corpus_prefix;
 		this.queue = queue;
 		this.directoryStack = new Stack<String>();
 		semaphore = new Semaphore(0);
+		lastModified = new HashMap<String, Long>();
+		this.minimumFileSizeBatch = minimumFileSizeBatch;
 	}
 	
 	public void putDirectoryCorpusDestination(String destination) {
@@ -39,6 +38,17 @@ public class DirectoryCrawler implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public long directorySize(File directory) {
+		 long length = 0;
+		    for (File file : directory.listFiles()) {
+		        if (file.isFile())
+		            length += file.length();
+		        else
+		            length += directorySize(file);
+		    }
+		    return length;	
 	}
 
 	@Override
@@ -61,7 +71,15 @@ public class DirectoryCrawler implements Runnable {
 					if (dir.exists()) {
 						
 						for (File f: dir.listFiles()) {
-							if(f.getName().startsWith(this.file_corpus_prefix)) {
+							
+							//evaluating last modified
+							long lastModNew = f.lastModified();
+							long lastModOld = -1;
+							if (lastModified.containsKey(f.getName())) lastModOld = lastModified.get(f.getName());
+							else lastModified.put(f.getName(), f.lastModified());
+							boolean createTask = (lastModOld < lastModNew);
+							
+							if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
 								queue.put(new Task(Type.DIRECTORY, f.getName(), null));
 							}else {
 								stack.push(f.getName());

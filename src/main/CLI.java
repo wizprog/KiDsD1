@@ -1,7 +1,5 @@
 package main;
 
-//Author igor
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +53,7 @@ public class CLI {
 					crawler_sleep_time  = Integer.parseInt(tokens[1]);;
 					break;
 				case "file_scanning_size_limit":
-					file_size_limit  = Integer.parseInt(tokens[1]);;
+					file_size_limit  = Long.parseLong(tokens[1]);;
 					break;
 				case "hop_count":
 					hop_count  = Integer.parseInt(tokens[1]);;
@@ -72,7 +70,7 @@ public class CLI {
 			JobDispatcher jd = new JobDispatcher(jbQueue);
 			Thread jobDispatcherThread = new Thread(jd);
 			
-			DirectoryCrawler dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue);
+			DirectoryCrawler dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue, file_size_limit);
 			Thread directoryCrawlerThread = new Thread(dcThread);
 			
 			//Thread pools

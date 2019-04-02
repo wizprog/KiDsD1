@@ -52,5 +52,9 @@ public class ResultRetriever implements Runnable,ResultInterface {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void parseQuery(String query) {
+		
+	}
 
 }
