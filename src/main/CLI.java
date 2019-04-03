@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import components.ResultRetrieverThreadPool;
 import components.WebScannerThreadPool;
 import connections.DirectoryCrawler;
 import connections.JobDispatcher;
@@ -74,7 +75,10 @@ public class CLI {
 			Thread directoryCrawlerThread = new Thread(dcThread);
 			
 			//Thread pools
-			WebScannerThreadPool wsPool = new WebScannerThreadPool();
+			ResultRetrieverThreadPool rrtp = new ResultRetrieverThreadPool();
+			Thread resultRetrieverThreadPool = new Thread(rrtp);
+			
+			WebScannerThreadPool wsPool = new WebScannerThreadPool(rrtp);
 			Thread webScannerThreadPoolThread = new Thread(wsPool);
 			
 			
@@ -82,8 +86,9 @@ public class CLI {
 			
 			
 			//Starting threads
-			jobDispatcherThread.start();
+			resultRetrieverThreadPool.start();
 			directoryCrawlerThread.start();
+			jobDispatcherThread.start();
 			webScannerThreadPoolThread.start();
 			fileScannerThreadPoolThread.start();
 			

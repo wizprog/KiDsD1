@@ -11,12 +11,14 @@ import connections.Task;
 public class WebScannerThreadPool implements Runnable {
 	
 	ExecutorService ex;
+	ResultRetrieverThreadPool rrtp;
 	
 	Semaphore semaphore;
 	
-	public WebScannerThreadPool() {
+	public WebScannerThreadPool(ResultRetrieverThreadPool rrtp) {
 		super();
 		this.semaphore = new Semaphore(0);
+		this.rrtp = rrtp;
 	}
 
 	@Override
@@ -33,17 +35,16 @@ public class WebScannerThreadPool implements Runnable {
 		}
 	}
 	
-	public Future<Map<String, Integer>> putTask(Task t) {
+	public void putTask(Task t) {
 		try {
 			semaphore.acquire();
 			Future<Map<String, Integer>> help = ex.submit(t.getScannerPtr());
+			this.rrtp.putWaitResult(help);
 			semaphore.release();
-			return help;
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
 	}
 	
 	public void stop() {
