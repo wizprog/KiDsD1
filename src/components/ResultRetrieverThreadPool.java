@@ -13,6 +13,8 @@ public class ResultRetrieverThreadPool implements Runnable , ResultInterface{
 	
 	ExecutorService ex;
 	private final BlockingQueue<Future<Map<String,Integer>>> queue;	
+	private Map<String, Map<String,Integer>> webResultData;
+	private Map<String, Map<String,Integer>> fileResultData;
 	
 	public ResultRetrieverThreadPool() {
 		super();

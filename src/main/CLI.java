@@ -101,17 +101,21 @@ public class CLI {
 						dcThread.putDirectoryCorpusDestination(tokens[1]);
 						break;
 					case 1:  //add new Web page to WebScannerPool
+//						wsPool.putTask(new Task(Type.WEB, tokens[1], hop_count, key_words));
 						break;
 					case 2:  //get result from Result retriever, blocking next request unitl it gets the result
 						break;
 					case 3:  //  ,not blocking next request unitl it gets the result
 						break;
 					case 4:  //cws - clear web summary, remove from result retriever web search info
+						rrtp.clearSummary("WEB");
 						break;
 					case 5:  //cfs - clear file summary, remove from result retriever file search info
+						rrtp.clearSummary("FILE");
 						break;
 					case 6:  //stoping the system
 						System.exit(0);
+						//Should signal all pools to end, wait for them and then finish
 						break;
 					default:
 						throw new NonExistingCommand("Not Existing Command");
