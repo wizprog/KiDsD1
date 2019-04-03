@@ -72,4 +72,14 @@ public class WebScanner implements Callable<Map<String,Integer>> {
         else return false;	
 	}
 
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
+	
+
 }

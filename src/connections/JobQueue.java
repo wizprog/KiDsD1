@@ -35,10 +35,4 @@ public class JobQueue<T> {
 		}
 		return null;
 	}
-	
-/*	public Future<Map<String, Integer>> get(){
-		
-	}*/
-	
-	
 }

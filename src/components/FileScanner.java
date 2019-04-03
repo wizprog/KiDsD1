@@ -48,8 +48,7 @@ public class FileScanner implements Callable<Map<String,Integer>> {
 								if (result.containsKey(x)) result.put(x, result.get(x) + 1 );
 
 							}
-					    }
-					    
+					    }			    
 				 }
 			 }
 			return result;
