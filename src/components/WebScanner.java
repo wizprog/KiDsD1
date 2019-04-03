@@ -36,7 +36,7 @@ public class WebScanner implements Callable<Map<String,Integer>> {
 			 Map<String,Integer> result = new HashMap<String,Integer>();
 			 
 			 for (String word: searchWords) {
-				 result.put(word, 0);
+				 result.put(word, null);
 			 }
 			 
 			if (this.hop_count > 0) {

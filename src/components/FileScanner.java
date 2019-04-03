@@ -31,7 +31,7 @@ public class FileScanner implements Callable<Map<String,Integer>> {
 			};
 			 
 			 for (String word: searchWords) {
-				 result.put(word, 0);
+				 result.put(word, null);
 			 }
 			 
 			 String[] dirArr = this.directoryUrls.toArray(new String[this.directoryUrls.size()]);

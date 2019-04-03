@@ -8,23 +8,24 @@ import interfaces.ResultInterface;
 
 public class ResultRetriever implements Runnable {
 
-	Map<String, Map<String, Integer>> resDict;
-	BlockingQueue<Future<Map<String,Integer>>> queue;	
-	
-	public ResultRetriever(BlockingQueue<Future<Map<String,Integer>>> queue) {
-		this.queue = queue;
+	Map<String, Map<String, Integer>> webDictResult;
+	Map<String, Map<String, Integer>> fileDictResult;
+	String domainName;
+
+	public ResultRetriever(Map<String, Map<String, Integer>> webDictResult,
+			Map<String, Map<String, Integer>> fileDictResult, String domainName) {
+		super();
+		this.webDictResult = webDictResult;
+		this.fileDictResult = fileDictResult;
+		this.domainName = domainName;
 	}
-	
+
 	@Override
 	public void run() {
-		while(true) {
-			try {
-				Future<Map<String,Integer>> resultTask = this.queue.take();
-				Map<String,Integer> result = resultTask.get();
-			}catch(Exception e) {
-				e.printStackTrace();
-				continue;
-			}
+		try {
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

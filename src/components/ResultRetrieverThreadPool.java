@@ -1,73 +1,93 @@
 package components;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import exceptions.NonExistingCommand;
 import interfaces.ResultInterface;
 
-public class ResultRetrieverThreadPool implements Runnable , ResultInterface{
-	
+public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
+
 	ExecutorService ex;
-	private final BlockingQueue<Future<Map<String,Integer>>> queue;	
-	private Map<String, Map<String,Integer>> webResultData;
-	private Map<String, Map<String,Integer>> fileResultData;
-	
+	private Map<String, Map<String, Integer>> webResultData;
+	private Map<String, Map<String, Integer>> fileResultData;
+
 	public ResultRetrieverThreadPool() {
 		super();
-		this.queue = new ArrayBlockingQueue<Future<Map<String,Integer>>>(20) ;
+		webResultData = new HashMap<String, Map<String, Integer>>();
+		fileResultData = new HashMap<String, Map<String, Integer>>();
 	}
 
 	@Override
 	public void run() {
 		ex = Executors.newFixedThreadPool(10);
-		for (int i=0; i<10; i++) {
-			ResultRetriever r = new ResultRetriever(this.queue);
-			ex.execute(r);
-		}
+
 		System.out.println("Web Scanner Thread Pool started...");
-		while(true) {
+		while (true) {
 			try {
-				
-			}catch(Exception e) {
+
+			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
 			}
 		}
 	}
-	
-	public void putWaitResult(Future<Map<String,Integer>> wait) {
+
+	public void putWaitResult(Future<Map<String, Integer>> wait) {
 		try {
-			this.queue.put(wait);
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void stop() {
 		ex.shutdown();
 	}
 
+	public String parseName(String query) {
+		String name = query.substring(query.indexOf('|') + 1, query.length() - 1);
+		return name;
+	}
+
+	public String parseType(String query) {
+		String type = query.substring(0, query.indexOf('|'));
+		return type;
+	}
+
 	@Override
 	public Map<String, Integer> getResult(String query) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Map<String, Integer> queryResult(String query) {
-		// TODO Auto-generated method stub
+	public Map<String, Integer> queryResult(String query) throws Exception {
+		if (parseType(query).equals("web")) {
+			if (webResultData.containsKey(parseName(query))) {
+
+			}
+		} else if (parseType(query).equals("file")) {
+			if (fileResultData.containsKey(parseName(query))) {
+				return fileResultData.get(parseName(query));
+			}
+		} else {
+			throw new NonExistingCommand("Non existing command");
+		}
 		return null;
 	}
 
 	@Override
 	public void clearSummary(String summaryType) {
-		// TODO Auto-generated method stub
-		
+		if (summaryType.equals("WEB")) {
+			webResultData.clear();
+		}
+		else {
+			fileResultData.clear();
+		}
 	}
 
 	@Override
@@ -78,13 +98,15 @@ public class ResultRetrieverThreadPool implements Runnable , ResultInterface{
 
 	@Override
 	public Map<String, Map<String, Integer>> querySummary(String summaryType) {
-		// TODO Auto-generated method stub
+		if (summaryType.equals("web")) {
+			return webResultData;
+		}
 		return null;
 	}
 
 	@Override
 	public void addCorpusResult(String corpusName, Map<String, Integer> corpusResult) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

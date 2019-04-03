@@ -1,5 +1,6 @@
-/testing/
 /components/
 /connections/
-/main/
+/exceptions/
 /interfaces/
+/main/
+/testing/

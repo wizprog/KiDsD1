@@ -14,6 +14,16 @@ import connections.Task;
 import exceptions.NonExistingCommand;
 
 public class CLI {
+	
+	public static String parseName(String query) {
+		String name = query.substring(query.indexOf('|') + 1, query.length()-1);
+		return name;
+	}
+	
+	public static String parseType(String query) {
+		String type = query.substring(0, query.indexOf('|'));
+		return type;
+	}
 
 	public static void main(String[] args) {
 		File file = null;
@@ -104,8 +114,27 @@ public class CLI {
 //						wsPool.putTask(new Task(Type.WEB, tokens[1], hop_count, key_words));
 						break;
 					case 2:  //get result from Result retriever, blocking next request unitl it gets the result
+						String name = parseName(tokens[1]);
+						String type = parseType(tokens[1]);
+						if (name.equals("summary")) {
+							Map<String, Map<String, Integer>> result = rrtp.getSummary(type); 
+							//treba ispisati
+						}else {
+							Map<String, Integer> result = rrtp.getResult(tokens[1]);
+							//treba ispisati
+						}
 						break;
-					case 3:  //  ,not blocking next request unitl it gets the result
+					case 3:
+						String name1 = parseName(tokens[1]);
+						String type1 = parseType(tokens[1]);
+						if (name1.equals("summary")) {
+							Map<String, Map<String, Integer>> result = rrtp.querySummary(type1); 
+							//treba ispisati
+						}else {
+							Map<String, Integer> result = rrtp.queryResult(tokens[1]);
+							//treba ispisati
+						}						
+						//  ,not blocking next request unitl it gets the result
 						break;
 					case 4:  //cws - clear web summary, remove from result retriever web search info
 						rrtp.clearSummary("WEB");
