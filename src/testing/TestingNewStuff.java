@@ -19,6 +19,18 @@ public class TestingNewStuff {
 			  System.out.println(linkHref);
 			  System.out.println(linkText);
 			}
+			
+			System.out.println("---------------------------------------------");
+			
+			Elements allElements = doc.getAllElements();
+			for (Element link: allElements) {		
+				if (link.hasText()) {
+					System.out.println("---------------");
+					System.out.println(link.text());
+					String[] tokens = link.text().split("\\?|\\.|\\!|\\-|\\,|\\s+");
+					for (String x: tokens) if (!x.isEmpty()) System.out.println(x);
+				}
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

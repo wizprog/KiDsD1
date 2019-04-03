@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Semaphore;
-
 import exceptions.CorpusDoesNotExist;
 
 public class DirectoryCrawler implements Runnable {
@@ -14,11 +13,12 @@ public class DirectoryCrawler implements Runnable {
 	String file_corpus_prefix;
 	JobQueue<Task> queue;
 	Stack<String> directoryStack;
+	String searchingWords[];
 	private final Semaphore semaphore;
 	private  Map<String, Long> lastModified;
 	private long minimumFileSizeBatch;
 
-	public DirectoryCrawler(long sleep_time, String file_corpus_prefix, JobQueue<Task> queue, long minimumFileSizeBatch) {
+	public DirectoryCrawler(long sleep_time, String file_corpus_prefix, JobQueue<Task> queue, long minimumFileSizeBatch, String[] searchingWords) {
 		super();
 		this.sleep_time = sleep_time;
 		this.file_corpus_prefix = file_corpus_prefix;
@@ -27,6 +27,7 @@ public class DirectoryCrawler implements Runnable {
 		semaphore = new Semaphore(0);
 		lastModified = new HashMap<String, Long>();
 		this.minimumFileSizeBatch = minimumFileSizeBatch;
+		this.searchingWords = searchingWords;
 	}
 	
 	public void putDirectoryCorpusDestination(String destination) {
@@ -86,7 +87,7 @@ public class DirectoryCrawler implements Runnable {
 							if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
 								
 								if (currentTaskSize >= minimumFileSizeBatch && currentTaskSize!=0) {
-									queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
+									queue.put(new Task(Type.DIRECTORY, taskDocuments, null, this.searchingWords));
 								}
 								else {
 									currentTaskSize += directorySize(f);
@@ -112,7 +113,7 @@ public class DirectoryCrawler implements Runnable {
 								if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
 									
 									if (currentTaskSize >= minimumFileSizeBatch && currentTaskSize!=0) {
-										queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
+										queue.put(new Task(Type.DIRECTORY, taskDocuments, null, this.searchingWords));
 									}
 									else {
 										currentTaskSize += directorySize(f);
@@ -126,7 +127,7 @@ public class DirectoryCrawler implements Runnable {
 						
 						//if currentTaskSize < minimumFileSizeBatch and not 0
 						if (currentTaskSize != 0) {
-							queue.put(new Task(Type.DIRECTORY, taskDocuments, null));
+							queue.put(new Task(Type.DIRECTORY, taskDocuments, null, this.searchingWords));
 						}
 					} 
 					else {

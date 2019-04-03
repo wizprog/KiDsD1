@@ -70,7 +70,7 @@ public class CLI {
 			JobDispatcher jd = new JobDispatcher(jbQueue);
 			Thread jobDispatcherThread = new Thread(jd);
 			
-			DirectoryCrawler dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue, file_size_limit);
+			DirectoryCrawler dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue, file_size_limit, key_words);
 			Thread directoryCrawlerThread = new Thread(dcThread);
 			
 			//Thread pools
