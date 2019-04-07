@@ -19,11 +19,17 @@ public class ResultRetriever implements Runnable {
 		this.fileDictResult = fileDictResult;
 		this.domainName = domainName;
 	}
+	
+	//calculating summary method
+	public Map<String, Map<String, Integer>> summary(){
+			
+		return null;
+	}
 
 	@Override
 	public void run() {
 		try {
-
+			//calling method above and yeilding result to thread pool
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
