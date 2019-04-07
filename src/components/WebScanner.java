@@ -15,8 +15,8 @@ import org.jsoup.select.Elements;
 import connections.JobQueue;
 import connections.Task;
 
-public class WebScanner implements Callable<Map<String,Integer>> {
-	
+public class WebScanner implements Callable<Map<String, Integer>> {
+
 	int hop_count;
 	String url;
 	JobQueue<Task> queue;
@@ -30,46 +30,52 @@ public class WebScanner implements Callable<Map<String,Integer>> {
 	}
 
 	@Override
-	public Map<String,Integer> call() {
+	public Map<String, Integer> call() {
 		try {
 			Document doc = Jsoup.connect(this.url).get();
-			 Map<String,Integer> result = new HashMap<String,Integer>();
-			 
-			 for (String word: searchWords) {
-				 result.put(word, null);
-			 }
-			 
+			Map<String, Integer> result = new HashMap<String, Integer>();
+
+			for (String word : searchWords) {
+				result.put(word, null);
+			}
+
 			if (this.hop_count > 0) {
 				Elements links = doc.getElementsByTag("a");
 				for (Element link : links) {
-				  String linkHref = link.attr("href");
-	//			  this.queue.put(new Task(Type.WEB, this.hop_count-1, linkHref));
+					String linkHref = link.attr("href");
+					// this.queue.put(new Task(Type.WEB, this.hop_count-1,
+					// linkHref));
 				}
 			}
 			Elements allElements = doc.getAllElements();
-			for (Element link: allElements) {		
+			for (Element link : allElements) {
 				if (link.hasText()) {
 					String[] tokens = link.text().split("\\?|\\.|\\!|\\-|\\,|\\s+");
-					for (String x: tokens) if (!x.isEmpty()) {
-						if (result.containsKey(x)) result.put(x, result.get(x) + 1 );
-					}
+					for (String x : tokens)
+						if (!x.isEmpty()) {
+							if (result.containsKey(x))
+								result.put(x, result.get(x) + 1);
+						}
 				}
 			}
-			
+
 			return result;
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
-	
+
 	private boolean isUrl(String isUrl) {
-		Pattern pattern = Pattern.compile("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$");
-        Matcher matcher = pattern.matcher("http://naruto.rs");
-        if(matcher.find()) return true;
-        else return false;	
+		Pattern pattern = Pattern.compile(
+				"^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$");
+		Matcher matcher = pattern.matcher("http://naruto.rs");
+		if (matcher.find())
+			return true;
+		else
+			return false;
 	}
 
 	public String getUrl() {
@@ -79,7 +85,5 @@ public class WebScanner implements Callable<Map<String,Integer>> {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	
-	
 
 }

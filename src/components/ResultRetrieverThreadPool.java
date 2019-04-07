@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 
 import exceptions.NonExistingCommand;
 import interfaces.ResultInterface;
@@ -14,11 +14,13 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	ExecutorService ex;
 	private Map<String, Map<String, Integer>> webResultData;
 	private Map<String, Map<String, Integer>> fileResultData;
+	Semaphore resultSemaphore;
 
 	public ResultRetrieverThreadPool() {
 		super();
 		webResultData = new HashMap<String, Map<String, Integer>>();
 		fileResultData = new HashMap<String, Map<String, Integer>>();
+		resultSemaphore = new Semaphore(0);
 	}
 
 	@Override
@@ -36,13 +38,21 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		}
 	}
 
-	public void putWaitResult(Future<Map<String, Integer>> wait) {
+	public void putResult(Map<String, Integer> result, String type, String key) {
 		try {
+			resultSemaphore.acquire();
 
-		} catch (Exception e) {
+			if (type.equals("WEB")) {
+				webResultData.put(key, result);
+			} else {
+				fileResultData.put(key, result);
+			}
+			resultSemaphore.release();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 
 	public void stop() {
@@ -84,8 +94,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	public void clearSummary(String summaryType) {
 		if (summaryType.equals("WEB")) {
 			webResultData.clear();
-		}
-		else {
+		} else {
 			fileResultData.clear();
 		}
 	}
