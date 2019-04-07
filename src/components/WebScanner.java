@@ -15,7 +15,7 @@ import org.jsoup.select.Elements;
 import connections.JobQueue;
 import connections.Task;
 
-public class WebScanner implements Callable<Map<String, Integer>> {
+public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 
 	int hop_count;
 	String url;
@@ -30,7 +30,7 @@ public class WebScanner implements Callable<Map<String, Integer>> {
 	}
 
 	@Override
-	public Map<String, Integer> call() {
+	public Map<String, Map<String, Integer>> call() {
 		try {
 			Document doc = Jsoup.connect(this.url).get();
 			Map<String, Integer> result = new HashMap<String, Integer>();
@@ -58,8 +58,9 @@ public class WebScanner implements Callable<Map<String, Integer>> {
 						}
 				}
 			}
-
-			return result;
+			Map<String, Map<String, Integer>> finalResult = new HashMap<String,  Map<String, Integer>>();
+			finalResult.put(this.url, result);
+			return finalResult;
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

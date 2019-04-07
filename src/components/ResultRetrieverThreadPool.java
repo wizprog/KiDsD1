@@ -71,6 +71,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 
 	@Override
 	public Map<String, Integer> getResult(String query) {
+		
 		return null;
 	}
 

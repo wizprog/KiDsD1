@@ -14,7 +14,7 @@ public class WebScannerThreadPool implements Runnable {
 	
 	ExecutorService ex;
 	ResultRetrieverThreadPool rrtp;
-	List<Future<Map<String,Integer>>> futureBlock;
+	List<Future<Map<String, Map<String, Integer>>>> futureBlock;
 	
 	Semaphore semaphore;
 	
@@ -22,13 +22,13 @@ public class WebScannerThreadPool implements Runnable {
 		super();
 		this.semaphore = new Semaphore(0);
 		this.rrtp = rrtp;
-		futureBlock = new ArrayList<Future<Map<String,Integer>>>();
+		futureBlock = new ArrayList<Future<Map<String, Map<String, Integer>>>>();
 	}
 
 	@Override
 	public void run() {
 		ex = Executors.newFixedThreadPool(10);
-		Future<Map<String, Integer>> help;
+		Future<Map<String, Map<String, Integer>>> help;
 		System.out.println("Web Scanner Thread Pool started...");
 		while(true) {
 			try {
@@ -37,7 +37,8 @@ public class WebScannerThreadPool implements Runnable {
 				if (!futureBlock.isEmpty()) help = futureBlock.remove(0);
 				semaphore.release();
 				if (help != null){
-					Map<String, Integer> result = help.get();
+					Map<String, Map<String, Integer>> result = help.get();
+					this.putRes(result);
 				}
 			}catch(Exception e) {
 				e.printStackTrace();
@@ -46,14 +47,15 @@ public class WebScannerThreadPool implements Runnable {
 		}
 	}
 	
-	public void putRes(Map<String, Integer> result){
-		//rrtp.putResult(result, "WEB", );
+	public void putRes(Map<String, Map<String, Integer>> result){
+		String key = result.entrySet().iterator().next().getKey();
+		rrtp.putResult(result.get(key), "WEB", key);
 	}
 	
 	public void putTask(Task t) {
 		try {
 			semaphore.acquire();
-			Future<Map<String, Integer>> help = ex.submit(t.getScannerPtr());
+			Future<Map<String, Map<String, Integer>>> help = ex.submit(t.getScannerPtr());
 			futureBlock.add(help);
 			//this.rrtp.putWaitResult(help);
 			

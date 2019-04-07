@@ -16,7 +16,7 @@ public class Task implements TaskJob {
 
 	Type myType;
 	String task_name_destination;
-	Callable<Map<String,Integer>> scannerPtr;
+	Callable<Map<String, Map<String, Integer>>> scannerPtr;
 
 	public Task(Type myType, String task_name_destination, Integer hop_count, String[] searchingWords) {
 		super();
@@ -66,7 +66,7 @@ public class Task implements TaskJob {
 		
 	}
 	
-	public Callable<Map<String,Integer>> getScannerPtr(){
+	public Callable<Map<String, Map<String, Integer>>> getScannerPtr(){
 		return this.scannerPtr;
 	}
 
