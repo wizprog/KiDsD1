@@ -79,7 +79,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	public Map<String, Integer> queryResult(String query) throws Exception {
 		if (parseType(query).equals("web")) {
 			if (webResultData.containsKey(parseName(query))) {
-
+				return webResultData.get(parseName(query));
 			}
 		} else if (parseType(query).equals("file")) {
 			if (fileResultData.containsKey(parseName(query))) {
