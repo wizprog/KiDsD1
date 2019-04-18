@@ -35,7 +35,7 @@ public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 	@Override
 	public Map<String, Map<String, Integer>> call() {
 		try {
-			CLI.wstp.taskStarted(this.url);
+			CLI.wstp.taskStarted(this.url); //signal to inform that a new task has started
 			Document doc = Jsoup.connect(this.url).get();
 			Map<String, Integer> result = new HashMap<String, Integer>();
 
@@ -63,10 +63,13 @@ public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 			}
 			Map<String, Map<String, Integer>> finalResult = new HashMap<String,  Map<String, Integer>>();
 			finalResult.put(this.url, result);
+			// Testing purposes
+	         Thread.sleep(10000); 
 			CLI.wstp.taskEnded(this.url);
 			return finalResult;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		} catch (IllegalArgumentException e) {
+			System.out.println("Non existing URL");
+		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		return null;

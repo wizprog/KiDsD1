@@ -23,6 +23,7 @@ public class JobDispatcher implements Runnable {
 				CLI.fstp.putTask(t);
 			}
 		}
+		System.out.println("Job dispatcher ended...");
 	}
 
 	public boolean isShutdown() {

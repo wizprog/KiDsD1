@@ -54,7 +54,8 @@ public class FileScannerThreadPool implements Runnable {
 					Map<String, Map<String, Integer>> result = help.get();
 					this.putRes(result);
 				}
-				Thread.sleep(1000); //just not to spam the cpu every moment, testing purposes 
+				//just not to spam the cpu every moment, testing purposes 
+				//Thread.sleep(1000); 
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
@@ -93,6 +94,7 @@ public class FileScannerThreadPool implements Runnable {
 		try {
 			endSemaphore.acquire();
 			this.taskRunner++;
+			//we need to put all directory paths contained in a specific task
 			File[] dirArr = taskName.toArray(new File[taskName.size()]);
 			for (File directory : dirArr) taskArrayNames.add(directory.getAbsolutePath());
 			endSemaphore.release();
@@ -107,6 +109,7 @@ public class FileScannerThreadPool implements Runnable {
 		try {
 			endSemaphore.acquire();
 			this.taskRunner--;
+			//we need to remove all directory paths contained in a specific task
 			File[] dirArr = taskName.toArray(new File[taskName.size()]);
 			for (File directory : dirArr) taskArrayNames.remove(directory.getAbsolutePath());
 			endSemaphore.release();

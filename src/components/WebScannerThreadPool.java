@@ -1,6 +1,7 @@
 package components;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +47,7 @@ public class WebScannerThreadPool implements Runnable {
 				semaphore.release();
 				if (help != null){
 					Map<String, Map<String, Integer>> result = help.get();
-					this.putRes(result);
+					if (result != null) this.putRes(result);
 				}
 			}catch(Exception e) {
 				e.printStackTrace();
@@ -109,7 +110,9 @@ public class WebScannerThreadPool implements Runnable {
 		boolean result = false;
 		try {
 			endSemaphore.acquire();
-			result = taskArrayNames.contains(taskName);
+			Iterator<String> iter = taskArrayNames.iterator(); 
+			//we can search all urls working within a specified domain or a full url compare
+			while (iter.hasNext()) if (iter.next().startsWith(taskName)) result = true;
 			endSemaphore.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

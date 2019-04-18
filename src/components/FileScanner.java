@@ -26,8 +26,7 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 	public Map<String, Map<String, Integer>> call() throws Exception {
 
 		try {
-			CLI.fstp.taskStarted(directoryUrls);
-			Map<String, Integer> result = new HashMap<String, Integer>();
+			CLI.fstp.taskStarted(directoryUrls); //signal to inform that a new task has started
 			Map<String, Map<String, Integer>> finalResult = new HashMap<String, Map<String, Integer>>();
 			
 			FilenameFilter filter = new FilenameFilter() {
@@ -36,13 +35,10 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 				}
 			};
 
-			for (String word : searchWords) {
-				result.put(word, 0);
-			}
-
 			File[] dirArr = this.directoryUrls.toArray(new File[this.directoryUrls.size()]);
-			for (File directory : dirArr) { // da li moze ovako kroz Stack
-												// proveriti
+			for (File directory : dirArr) { 
+				Map<String, Integer> result = new HashMap<String, Integer>();
+				for (String word : searchWords) result.put(word, 0);
 				File[] listOfFiles = directory.listFiles(filter);
 				for (int i = 0; i < listOfFiles.length; i++) {
 					File file = listOfFiles[i];
@@ -61,6 +57,8 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 				}
 				finalResult.put(directory.getAbsolutePath(), result);
 			}
+			// Testing purposes
+	        // Thread.sleep(10000);  
 			CLI.fstp.taskEnded(directoryUrls);
 			return finalResult;
 

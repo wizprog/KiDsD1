@@ -10,6 +10,5 @@ public interface ResultInterface {
 	public Map<String, Integer> queryResult(String query) throws Exception;
 	public void clearSummary(Type summaryType);
 	public Map<String, Map<String, Integer>> getSummary(String summaryType);
-	public Map<String, Map<String, Integer>> querySummary(String summaryType);
-	public void addCorpusResult(String corpusName, Map<String,Integer> corpusResult);
+	public Map<String, Map<String, Integer>> querySummary(String summaryType) throws Exception;
 }

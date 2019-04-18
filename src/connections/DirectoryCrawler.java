@@ -142,6 +142,7 @@ public class DirectoryCrawler implements Runnable {
 				continue;
 			}
 		}
+		System.out.println("Directory Crawler ended");
 	}
 
 	public boolean isShutDown() {

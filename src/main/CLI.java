@@ -35,7 +35,7 @@ public class CLI {
 	public static long refresh_time;
 	
 	public static String parseName(String query) {
-		String name = query.substring(query.indexOf('|') + 1, query.length()-1);
+		String name = query.substring(query.indexOf('|') + 1, query.length());
 		return name;
 	}
 	
@@ -50,7 +50,7 @@ public class CLI {
 		    Map<String, Integer> helpMap = entry.getValue();
 		    System.out.println(key + ":");
 		    for (Map.Entry<String, Integer> entry2 : helpMap.entrySet()) {
-		    	System.out.println(entry2.getKey() + ": " + entry.getValue());
+		    	System.out.println(entry2.getKey() + ": " + entry.getValue().get(entry2.getKey()));
 		    }
 		} 
 	}
@@ -112,6 +112,8 @@ public class CLI {
 			}
 			System.out.println("Config file reading finished...");
 			
+			
+			//Thread and thread pool creation
 			jbQueue = new JobQueue<Task>(); 
 			
 			jd = new JobDispatcher(jbQueue);
@@ -120,7 +122,7 @@ public class CLI {
 			dcThread = new DirectoryCrawler(crawler_sleep_time, corpus_prefix, jbQueue, file_size_limit, key_words);
 			Thread directoryCrawlerThread = new Thread(dcThread);
 			
-			ResultRetrieverThreadPool rrtp = new ResultRetrieverThreadPool();
+			rrtp = new ResultRetrieverThreadPool();
 			Thread resultRetrieverThreadPool = new Thread(rrtp);
 			
 			fstp = new FileScannerThreadPool(rrtp);
@@ -165,18 +167,20 @@ public class CLI {
 					case 2:  //get - get result from Result retriever, blocking next request unitl it gets the result
 						String name = parseName(tokens[1]);
 						String type = parseType(tokens[1]);
+						if (!type.equals("web") && !type.equals("file")) throw new NonExistingCommand("Not Existing Command");
 						if (name.equals("summary")) {
 							Map<String, Map<String, Integer>> result = rrtp.getSummary(type); 
 							printSummaryMap(result);
 						}else {
 							Map<String, Integer> result = rrtp.getResult(tokens[1]);
-							//treba ispisati
+							printSimpleMap(result);
 						}
 						break;
 						
 					case 3: // query - get result from Result retriever, not blocking next request, just show the info if exists
 						String name1 = parseName(tokens[1]);
 						String type1 = parseType(tokens[1]);
+						if (!type1.equals("web") && !type1.equals("file")) throw new NonExistingCommand("Not Existing Command");
 						if (name1.equals("summary")) {
 							Map<String, Map<String, Integer>> result = rrtp.querySummary(type1); 
 							if (result == null) break;
@@ -208,6 +212,8 @@ public class CLI {
 					default:
 						throw new NonExistingCommand("Not Existing Command");
 					}
+				}else {
+					throw new NonExistingCommand("Not Existing Command");
 				}
 				} catch (Exception e) {
 
