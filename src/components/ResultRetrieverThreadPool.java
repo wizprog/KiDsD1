@@ -22,7 +22,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 
 	ExecutorService ex;
 	private Map<String, Map<String, Integer>> webResultData, fileResultData, webResultDataSummary, fileResultDataSummary, webResultDataDomain;
-	Semaphore putResultSemaphore, resultSemaphore, endSemaphore;
+	Semaphore putResultSemaphore, endSemaphore;
 	boolean shutdown;
 	int taskRunner;
 
@@ -34,7 +34,6 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		this.fileResultDataSummary = new HashMap<String, Map<String, Integer>>();
 		this.webResultDataDomain = new HashMap<String, Map<String, Integer>>();
 		this.putResultSemaphore = new Semaphore(1); 
-		this.resultSemaphore = new Semaphore(0);
 		this.ex = Executors.newFixedThreadPool(10);
 		this.shutdown = false;
 		this.taskRunner = 0;
@@ -95,7 +94,10 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 				 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(deepCopy(webResultData), deepCopy(fileResultData), name, ResultRetrieverTaskType.DOMENSCANER, Type.WEB);
 			     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
 			     Map<String, Map<String, Integer>> result = help.get();
+			     
+			     putResultSemaphore.acquire();
 			     this.webResultDataDomain.put(result.entrySet().iterator().next().getKey(), result.entrySet().iterator().next().getValue());
+			     putResultSemaphore.release();
 			     return result.get(name);
 			}
 		   return this.webResultDataDomain.get(name);			
@@ -166,14 +168,22 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 					if (webResultDataSummary.isEmpty()) {
 					 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(deepCopy(webResultData), deepCopy(fileResultData), null, ResultRetrieverTaskType.SUMMARY, Type.WEB);
 				     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
-				     webResultDataSummary = help.get();
+				     Map<String, Map<String, Integer>> result = help.get();
+				     
+				     putResultSemaphore.acquire();
+				     webResultDataSummary = result;
+				     putResultSemaphore.release();
 					}
 					return webResultDataSummary;
 			} else {
 					if (fileResultDataSummary.isEmpty()) {
 						 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(deepCopy(webResultData), deepCopy(fileResultData), null, ResultRetrieverTaskType.SUMMARY, Type.DIRECTORY);
 					     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
-					     fileResultDataSummary = help.get();
+					     Map<String, Map<String, Integer>> result = help.get();
+					     
+					     putResultSemaphore.acquire();
+					     fileResultDataSummary = result;
+					     putResultSemaphore.release();
 						}
 					return fileResultDataSummary;
 			}
@@ -213,9 +223,9 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 
 	public void clearWebResultData() {
 		try {
-			resultSemaphore.acquire();
+			putResultSemaphore.acquire();
 			webResultData.clear();
-			resultSemaphore.release();
+			putResultSemaphore.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

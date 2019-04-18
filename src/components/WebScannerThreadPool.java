@@ -19,8 +19,7 @@ public class WebScannerThreadPool implements Runnable {
 	List<Future<Map<String, Map<String, Integer>>>> futureBlock;
 	int taskRunner = 0;
 	boolean shutdown;
-	Semaphore semaphore;
-	Semaphore endSemaphore;
+	Semaphore semaphore, endSemaphore;
 	ArrayList<String> taskArrayNames;
 	
 	public WebScannerThreadPool(ResultRetrieverThreadPool rrtp) {
