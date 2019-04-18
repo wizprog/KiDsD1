@@ -17,6 +17,7 @@ public class DirectoryCrawler implements Runnable {
 	private final Semaphore semaphore;
 	private  Map<String, Long> lastModified;
 	private long minimumFileSizeBatch;
+	private boolean shutDown;
 
 	public DirectoryCrawler(long sleep_time, String file_corpus_prefix, JobQueue<Task> queue, long minimumFileSizeBatch, String[] searchingWords) {
 		super();
@@ -28,6 +29,7 @@ public class DirectoryCrawler implements Runnable {
 		lastModified = new HashMap<String, Long>();
 		this.minimumFileSizeBatch = minimumFileSizeBatch;
 		this.searchingWords = searchingWords;
+		this.shutDown = false;
 	}
 	
 	public void putDirectoryCorpusDestination(String destination) {
@@ -60,7 +62,7 @@ public class DirectoryCrawler implements Runnable {
 		
 		long currentTaskSize = 0;
 		System.out.println("Directory crawler started...");
-		while(true) {
+		while(!this.shutDown) {
 			try {
 				directorySearch = null;
 				currentTaskSize = 0;
@@ -141,5 +143,15 @@ public class DirectoryCrawler implements Runnable {
 			}
 		}
 	}
+
+	public boolean isShutDown() {
+		return shutDown;
+	}
+
+	public void setShutDown(boolean shutDown) {
+		this.shutDown = shutDown;
+	}
+	
+	
 
 }

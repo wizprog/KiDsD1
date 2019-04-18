@@ -7,8 +7,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
+import connections.Type;
 import exceptions.NonExistingCommand;
 import interfaces.ResultInterface;
+import main.CLI;
 
 public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 
@@ -16,23 +18,29 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	private Map<String, Map<String, Integer>> webResultData; // cache
 	private Map<String, Map<String, Integer>> fileResultData; // cache
 	Semaphore putResultSemaphore, summarySemaphore, resultSemaphore;
+	private Map<String, Map<String, Integer>> webResultDataSummary;
+	private Map<String, Map<String, Integer>> fileResultDataSummary;
+	boolean shutdown;
+	
 
 	public ResultRetrieverThreadPool() {
 		super();
 		webResultData = new HashMap<String, Map<String, Integer>>();
 		fileResultData = new HashMap<String, Map<String, Integer>>();
-		// !!!!!!!!!!!!!!!!!!!!!!!!! verovatno se inicijalizuju sa 1,0,0 ali izguglaj
-		putResultSemaphore = new Semaphore(0); // treba samo 1 nit da prolazi
-		summarySemaphore = new Semaphore(-1); // treba da se odmah zablokira
-		resultSemaphore = new Semaphore(-1); // treba da se odmah zablokira
+		webResultDataSummary = new HashMap<String, Map<String, Integer>>();
+		fileResultDataSummary = new HashMap<String, Map<String, Integer>>();
+		putResultSemaphore = new Semaphore(1); // treba samo 1 nit da prolazi
+		summarySemaphore = new Semaphore(0); // treba da se odmah zablokira
+		resultSemaphore = new Semaphore(0); // treba da se odmah zablokira
+		ex = Executors.newFixedThreadPool(10);
+		this.shutdown = false;
 	}
 
 	@Override
 	public void run() {
-		ex = Executors.newFixedThreadPool(10);
 
 		System.out.println("Web Scanner Thread Pool started...");
-		while (true) {
+		while (!this.shutdown) {
 			try {
 
 			} catch (Exception e) {
@@ -42,17 +50,8 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		}
 	}
 
-	public void putResult(Map<String, Integer> result, String type, String key) {
+	public void putResult(Map<String, Integer> result, Type type, String key) {
 		try {
-
-			// !!!!!!!!!!!
-			// https://stackoverflow.com/questions/25563640/difference-between-semaphore-initialized-with-1-and-0
-			// mozda treba da se inicijalizuju na 1, da bi prvi put prosao, ovo ti koristis
-			// kao region tj da samo 1 nit upisuje
-			// sto znaci da semafor treba da ima vrednost 1 jer je to broj permitova,
-			// sumarry i result trebaju da su na 0 jer
-			// se zablokiraju dokle god druga nit im ne da release da prodju
-
 			putResultSemaphore.acquire();
 			if (type.equals("WEB")) {
 				webResultData.put(key, result);
@@ -61,14 +60,6 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 			}
 			putResultSemaphore.release();
 
-			// moze i ovako jer se ovako definisu regioni u javi
-			// synchronized (this) {
-			// if (type.equals("WEB")) {
-			// webResultData.put(key, result);
-			// } else {
-			// fileResultData.put(key, result);
-			// }
-			// }
 
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -99,15 +90,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 
 	@Override
 	public Map<String, Integer> queryResult(String query) throws Exception {
-		//mozda bi mogli celu logiku za blokiranje da prebacimo u main
 		if (parseType(query).equals("web")) {
-			/*
-			 * dokle god nije ispunjeno jedno od sledeceg: ne postoji korpus ili ima nula
-			 * (nisu svi zavrsili) konstantno se zablokiraj na semaforu, razlog je sto je
-			 * moguc slucaj da vise threadova nisu zavrsili, pa kad prvi zavrsi ne sme da
-			 * probudi ovu metodu dokle god nisu svi zavrsili, kada nema nula i postoji
-			 * korpus vrati vrednost
-			 */
 			while (!webResultData.containsKey(parseName(query))
 					|| webResultData.get(parseName(query)).containsValue(0)) {
 				resultSemaphore.acquire();
@@ -127,11 +110,19 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	}
 
 	@Override
-	public void clearSummary(String summaryType) {
-		if (summaryType.equals("WEB")) {
-			webResultData.clear();
-		} else {
-			fileResultData.clear();
+	public void clearSummary(Type summaryType) {
+		try {
+			putResultSemaphore.acquire();
+			if (summaryType.equals("WEB")) {
+				webResultData.clear();
+			} else {
+				fileResultData.clear();
+			}
+			putResultSemaphore.release();
+			System.out.println("Clear summary done");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -142,14 +133,14 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 				if (!isFinished(summaryType)) {
 					summarySemaphore.acquire(); // treba da se zablokira jer nije zavrsen summary, cim prodje moze da
 												// vrati
-					return webResultData;
+					return webResultDataSummary;
 				}
 			} else {
 				if (!isFinished(summaryType)) {
 
 					summarySemaphore.acquire(); // treba da se zablokira jer nije zavrsen summary, cim prodje moze da
 												// vrati
-					return fileResultData;
+					return fileResultDataSummary;
 				}
 			}
 
@@ -164,19 +155,27 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	public Map<String, Map<String, Integer>> querySummary(String summaryType) { // obradjuje se samo slucaj kada je
 																				// val==0
 		if (summaryType.equals("web")) {
-			if (!isFinished(summaryType)) {
-				Map<String, Map<String, Integer>> ret = new HashMap<String, Map<String, Integer>>();
-				ret.put("NOTFINISHED", new HashMap<String, Integer>());
-				return ret;
-			} else
-				return webResultData;
+			if (CLI.wstp.areSomeTasksRunning()) {
+				System.out.print("Some web tasks are running");
+				return null;
+			}else {
+				if(webResultDataSummary.isEmpty()) {
+					System.out.print("There is no info about web summary");
+					return null;
+				}
+			}
+			return webResultDataSummary;
 		} else {
-			if (!isFinished(summaryType)) {
-				Map<String, Map<String, Integer>> ret = new HashMap<String, Map<String, Integer>>();
-				ret.put("NOTFINISHED", new HashMap<String, Integer>());
-				return ret;
-			} else
-				return fileResultData;
+			if (CLI.fstp.areSomeTasksRunning()) {
+				System.out.print("Some file tasks are running");
+				return null;
+			}else {
+				if(fileResultDataSummary.isEmpty()) {
+					System.out.print("There is no info about file summary");
+					return null;
+				}
+			}			
+			return fileResultDataSummary;
 		}
 	}
 

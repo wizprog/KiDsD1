@@ -5,24 +5,36 @@ import main.CLI;
 public class JobDispatcher implements Runnable {
 
 	JobQueue<Task> jobqueue;
+	boolean shutdown;
 	
 	public JobDispatcher(JobQueue<Task> j) {
 		jobqueue=j;
+		this.shutdown = false;
 	}
 	
 	@Override
 	public void run() {
 		System.out.println("Job dispatcher started...");
-		while(true) {
+		while(!this.shutdown) {
 			Task t = jobqueue.get();
 			if (t.getType().equals("WEB")) {
 				System.out.println("Job dispatcher found WEB job...");
-				// t se prosledjuje WEB thread poolu
+				CLI.wstp.putTask(t);
 			} else {
 				System.out.println("Job dispatcher found FILE job...");
 				CLI.fstp.putTask(t);
 			}
 		}
 	}
+
+	public boolean isShutdown() {
+		return shutdown;
+	}
+
+	public void setShutdown(boolean shutdown) {
+		this.shutdown = shutdown;
+	}
+	
+	
 
 }

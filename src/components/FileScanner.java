@@ -26,7 +26,7 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 	public Map<String, Map<String, Integer>> call() throws Exception {
 
 		try {
-			CLI.fstp.taskStarted();
+			CLI.fstp.taskStarted(directoryUrls);
 			Map<String, Integer> result = new HashMap<String, Integer>();
 			Map<String, Map<String, Integer>> finalResult = new HashMap<String, Map<String, Integer>>();
 			
@@ -61,7 +61,7 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 				}
 				finalResult.put(directory.getAbsolutePath(), result);
 			}
-			CLI.fstp.taskEnded();
+			CLI.fstp.taskEnded(directoryUrls);
 			return finalResult;
 
 		} catch (IOException e) {

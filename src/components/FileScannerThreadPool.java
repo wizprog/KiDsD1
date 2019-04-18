@@ -1,16 +1,19 @@
 package components;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 import connections.Task;
+import connections.Type;
 
 public class FileScannerThreadPool implements Runnable {
 
@@ -19,7 +22,10 @@ public class FileScannerThreadPool implements Runnable {
 	ResultRetrieverThreadPool rrtp;
 	Semaphore semaphore;
 	Semaphore endSemaphore;
+	Semaphore taskSemaphore;
 	int taskRunner;
+	boolean shutdown;
+	ArrayList<String> taskArrayNames;
 
 	public FileScannerThreadPool(ResultRetrieverThreadPool rrtp) {
 		super();
@@ -29,13 +35,15 @@ public class FileScannerThreadPool implements Runnable {
 		ex = Executors.newFixedThreadPool(10);
 		this.rrtp = rrtp;
 		this.taskRunner = 0;
+		taskArrayNames = new ArrayList<String>();
+		this.shutdown = false;
 	}
 
 	@Override
 	public void run() {
 		System.out.println("File Scanner Thread Pool started...");
 		Future<Map<String, Map<String, Integer>>> help;
-		while (true) {
+		while (!this.shutdown) {
 			try {
 				help = null;
 				semaphore.acquire();
@@ -55,15 +63,9 @@ public class FileScannerThreadPool implements Runnable {
 	}
 
 	public void putRes(Map<String, Map<String, Integer>> result) {
-	/*	Iterator it = result.entrySet().iterator();
-		while (it.hasNext()) {
-			HashMap<String, Map<String, Integer>> itRes = (HashMap<String, Map<String, Integer>>)  it.next();
-			String key = itRes.entrySet().iterator().next().getKey();
-			rrtp.putResult(itRes.get(key), "WEB", key);
-		}  */
 		for (Map.Entry<String, Map<String, Integer>> entry : result.entrySet()) {
 		    String key = entry.getKey();
-		    rrtp.putResult(entry.getValue(), "FILE", key);
+		    rrtp.putResult(entry.getValue(), Type.DIRECTORY, key);
 		}
 		
 	}
@@ -83,13 +85,16 @@ public class FileScannerThreadPool implements Runnable {
 	public void stop() throws InterruptedException {
 		while(this.taskRunner != 0);
 		ex.shutdown();	
+		this.shutdown = true;
 		System.out.println("File Scanner Thread Pool ended...");
 	}
 	
-	public void taskStarted() {
+	public void taskStarted(Stack<File> taskName) {
 		try {
 			endSemaphore.acquire();
 			this.taskRunner++;
+			File[] dirArr = taskName.toArray(new File[taskName.size()]);
+			for (File directory : dirArr) taskArrayNames.add(directory.getAbsolutePath());
 			endSemaphore.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -98,15 +103,43 @@ public class FileScannerThreadPool implements Runnable {
 		
 	}
 	
-	public void taskEnded() {
+	public void taskEnded(Stack<File> taskName) {
 		try {
 			endSemaphore.acquire();
 			this.taskRunner--;
+			File[] dirArr = taskName.toArray(new File[taskName.size()]);
+			for (File directory : dirArr) taskArrayNames.remove(directory.getAbsolutePath());
 			endSemaphore.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public boolean checkIfItsWorking(String taskName) {
+		boolean result = false;
+		try {
+			endSemaphore.acquire();
+			result = taskArrayNames.contains(taskName);
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	public boolean areSomeTasksRunning() {
+		boolean result = false;
+		try {
+			endSemaphore.acquire();
+			result = (this.taskRunner > 0);
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
