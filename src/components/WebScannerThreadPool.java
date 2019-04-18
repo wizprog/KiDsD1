@@ -15,19 +15,23 @@ public class WebScannerThreadPool implements Runnable {
 	ExecutorService ex;
 	ResultRetrieverThreadPool rrtp;
 	List<Future<Map<String, Map<String, Integer>>>> futureBlock;
+	int taskRunner = 0;
 	
 	Semaphore semaphore;
+	Semaphore endSemaphore;
 	
 	public WebScannerThreadPool(ResultRetrieverThreadPool rrtp) {
 		super();
-		this.semaphore = new Semaphore(0);
+		this.semaphore = new Semaphore(1);
+		this.endSemaphore = new Semaphore(1);
 		this.rrtp = rrtp;
 		futureBlock = new ArrayList<Future<Map<String, Map<String, Integer>>>>();
+		ex = Executors.newFixedThreadPool(10);
+		this.taskRunner = 0;
 	}
 
 	@Override
 	public void run() {
-		ex = Executors.newFixedThreadPool(10);
 		Future<Map<String, Map<String, Integer>>> help;
 		System.out.println("Web Scanner Thread Pool started...");
 		while(true) {
@@ -67,7 +71,33 @@ public class WebScannerThreadPool implements Runnable {
 	}
 	
 	public void stop() {
+		while(this.taskRunner != 0);
 		ex.shutdown();
+		System.out.println("Web Scanner Thread Pool ended...");
+	}
+	
+	public void taskStarted() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner++;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void taskEnded() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner--;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 }

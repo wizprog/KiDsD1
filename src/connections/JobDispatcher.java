@@ -1,5 +1,7 @@
 package connections;
 
+import main.CLI;
+
 public class JobDispatcher implements Runnable {
 
 	JobQueue<Task> jobqueue;
@@ -18,7 +20,7 @@ public class JobDispatcher implements Runnable {
 				// t se prosledjuje WEB thread poolu
 			} else {
 				System.out.println("Job dispatcher found FILE job...");
-				// t se prosledjuje FILE thread poolu
+				CLI.fstp.putTask(t);
 			}
 		}
 	}

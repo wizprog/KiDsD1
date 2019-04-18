@@ -207,4 +207,15 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 			return true;
 		}
 	}
+	
+	public void clearWebResultData() {
+		try {
+			resultSemaphore.acquire();
+			webResultData.clear();
+			resultSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

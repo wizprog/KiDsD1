@@ -14,6 +14,7 @@ import org.jsoup.select.Elements;
 
 import connections.JobQueue;
 import connections.Task;
+import connections.Type;
 
 public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 
@@ -43,8 +44,7 @@ public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 				Elements links = doc.getElementsByTag("a");
 				for (Element link : links) {
 					String linkHref = link.attr("href");
-					// this.queue.put(new Task(Type.WEB, this.hop_count-1,
-					// linkHref));
+					this.queue.put(new Task(Type.WEB, linkHref, this.hop_count-1));
 				}
 			}
 			Elements allElements = doc.getAllElements();

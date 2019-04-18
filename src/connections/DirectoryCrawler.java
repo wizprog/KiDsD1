@@ -24,7 +24,7 @@ public class DirectoryCrawler implements Runnable {
 		this.file_corpus_prefix = file_corpus_prefix;
 		this.queue = queue;
 		this.directoryStack = new Stack<String>();
-		semaphore = new Semaphore(0);
+		semaphore = new Semaphore(1);
 		lastModified = new HashMap<String, Long>();
 		this.minimumFileSizeBatch = minimumFileSizeBatch;
 		this.searchingWords = searchingWords;
@@ -54,8 +54,8 @@ public class DirectoryCrawler implements Runnable {
 
 	@Override
 	public void run() {
-		Stack<String> stack = new Stack<String>();
-		Stack<String> taskDocuments = new Stack<String>();
+		Stack<File> stack = new Stack<File>();
+		Stack<File> taskDocuments = new Stack<File>();
 		String directorySearch;
 		
 		long currentTaskSize = 0;
@@ -80,8 +80,8 @@ public class DirectoryCrawler implements Runnable {
 							//evaluating last modified
 							long lastModNew = f.lastModified();
 							long lastModOld = -1;
-							if (lastModified.containsKey(f.getName())) lastModOld = lastModified.get(f.getName());
-							else lastModified.put(f.getName(), f.lastModified());
+							if (lastModified.containsKey(f.getAbsolutePath())) lastModOld = lastModified.get(f.getAbsolutePath());
+							else lastModified.put(f.getAbsolutePath(), f.lastModified());
 							boolean createTask = (lastModOld < lastModNew);
 							
 							if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
@@ -91,23 +91,22 @@ public class DirectoryCrawler implements Runnable {
 								}
 								else {
 									currentTaskSize += directorySize(f);
-									taskDocuments.push(f.getName());	
+									taskDocuments.push(f);	
 								}
 							}else {
-								stack.push(f.getName());
+								stack.push(f);
 							}
 						}
 						
 						//eventualy put everything in one while
 						while(!stack.empty()) {
-							String fileName = stack.pop();
-							File help = new File(fileName);
-							for (File f: dir.listFiles()) {
+							File help =  stack.pop();
+							for (File f: help.listFiles()) {
 								//evaluating last modified
 								long lastModNew = f.lastModified();
 								long lastModOld = -1;
-								if (lastModified.containsKey(f.getName())) lastModOld = lastModified.get(f.getName());
-								else lastModified.put(f.getName(), f.lastModified());
+								if (lastModified.containsKey(f.getAbsolutePath())) lastModOld = lastModified.get(f.getAbsolutePath());
+								else lastModified.put(f.getAbsolutePath(), f.lastModified());
 								boolean createTask = (lastModOld < lastModNew);
 								
 								if(f.getName().startsWith(this.file_corpus_prefix) && createTask) {
@@ -117,10 +116,10 @@ public class DirectoryCrawler implements Runnable {
 									}
 									else {
 										currentTaskSize += directorySize(f);
-										taskDocuments.push(f.getName());	
+										taskDocuments.push(f);	
 									}
 								}else {
-									stack.push(f.getName());
+									stack.push(f);
 								}
 							}
 						}

@@ -1,6 +1,7 @@
 package components;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +18,21 @@ public class FileScannerThreadPool implements Runnable {
 	List<Future<Map<String, Map<String, Integer>>>> futureBlock;
 	ResultRetrieverThreadPool rrtp;
 	Semaphore semaphore;
+	Semaphore endSemaphore;
+	int taskRunner;
 
 	public FileScannerThreadPool(ResultRetrieverThreadPool rrtp) {
 		super();
-		this.semaphore = new Semaphore(0);
+		this.semaphore = new Semaphore(1);
+		this.endSemaphore = new Semaphore(1);
 		futureBlock = new ArrayList<Future<Map<String, Map<String, Integer>>>>();
+		ex = Executors.newFixedThreadPool(10);
 		this.rrtp = rrtp;
+		this.taskRunner = 0;
 	}
 
 	@Override
 	public void run() {
-		ex = Executors.newFixedThreadPool(10);
 		System.out.println("File Scanner Thread Pool started...");
 		Future<Map<String, Map<String, Integer>>> help;
 		while (true) {
@@ -41,6 +46,7 @@ public class FileScannerThreadPool implements Runnable {
 					Map<String, Map<String, Integer>> result = help.get();
 					this.putRes(result);
 				}
+				Thread.sleep(1000); //just not to spam the cpu every moment, testing purposes 
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
@@ -49,29 +55,58 @@ public class FileScannerThreadPool implements Runnable {
 	}
 
 	public void putRes(Map<String, Map<String, Integer>> result) {
-		Iterator it = result.entrySet().iterator();
+	/*	Iterator it = result.entrySet().iterator();
 		while (it.hasNext()) {
-			Map<String, Map<String, Integer>> itRes = (Map<String, Map<String, Integer>>)  it.next();
+			HashMap<String, Map<String, Integer>> itRes = (HashMap<String, Map<String, Integer>>)  it.next();
 			String key = itRes.entrySet().iterator().next().getKey();
 			rrtp.putResult(itRes.get(key), "WEB", key);
+		}  */
+		for (Map.Entry<String, Map<String, Integer>> entry : result.entrySet()) {
+		    String key = entry.getKey();
+		    rrtp.putResult(entry.getValue(), "FILE", key);
 		}
+		
 	}
 
-	public Future<Map<String, Map<String, Integer>>> putTask(Task t) {
+	public void putTask(Task t) {
 		try {
 			semaphore.acquire();
 			Future<Map<String, Map<String, Integer>>> help = ex.submit(t.getScannerPtr());
 			futureBlock.add(help);
 			semaphore.release();
-			return help;
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
 	}
 
-	public void stop() {
-		ex.shutdown();
+	public void stop() throws InterruptedException {
+		while(this.taskRunner != 0);
+		ex.shutdown();	
+		System.out.println("File Scanner Thread Pool ended...");
+	}
+	
+	public void taskStarted() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner++;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void taskEnded() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner--;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

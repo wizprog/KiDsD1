@@ -9,20 +9,24 @@ import java.util.Scanner;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 
+import main.CLI;
+
 public class FileScanner implements Callable<Map<String, Map<String, Integer>>> {
 
-	Stack<String> directoryUrls;
+	Stack<File> directoryUrls;
 	String[] searchWords;
 
-	public FileScanner(Stack<String> directoryUrls) {
+	public FileScanner(Stack<File> directoryUrls) {
 		super();
 		this.directoryUrls = directoryUrls;
+		this.searchWords = CLI.key_words;
 	}
 
 	@Override
 	public Map<String, Map<String, Integer>> call() throws Exception {
 
 		try {
+			CLI.fstp.taskStarted();
 			Map<String, Integer> result = new HashMap<String, Integer>();
 			Map<String, Map<String, Integer>> finalResult = new HashMap<String, Map<String, Integer>>();
 			
@@ -33,14 +37,13 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 			};
 
 			for (String word : searchWords) {
-				result.put(word, null);
+				result.put(word, 0);
 			}
 
-			String[] dirArr = this.directoryUrls.toArray(new String[this.directoryUrls.size()]);
-			for (String directory : dirArr) { // da li moze ovako kroz Stack
+			File[] dirArr = this.directoryUrls.toArray(new File[this.directoryUrls.size()]);
+			for (File directory : dirArr) { // da li moze ovako kroz Stack
 												// proveriti
-				File dir = new File(directory);
-				File[] listOfFiles = dir.listFiles(filter);
+				File[] listOfFiles = directory.listFiles(filter);
 				for (int i = 0; i < listOfFiles.length; i++) {
 					File file = listOfFiles[i];
 					Scanner sc = new Scanner(file);
@@ -49,15 +52,16 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 						String[] tokens = link.split("\\?|\\.|\\!|\\-|\\,|\\s+");
 						for (String x : tokens)
 							if (!x.isEmpty()) {
-								if (result.containsKey(x))
-									result.put(x, result.get(x) + 1);
-									finalResult.put(directory, result);
-
-							}
+								if (result.containsKey(x)) {
+									int help_count = result.get(x);
+									result.put(x, help_count + 1);
+								}
+						}
 					}
 				}
+				finalResult.put(directory.getAbsolutePath(), result);
 			}
-
+			CLI.fstp.taskEnded();
 			return finalResult;
 
 		} catch (IOException e) {
