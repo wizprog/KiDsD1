@@ -3,10 +3,14 @@ package components;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
+import connections.ResultRetrieverTaskType;
 import connections.Type;
 import exceptions.NonExistingCommand;
 import interfaces.ResultInterface;
@@ -17,10 +21,11 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	ExecutorService ex;
 	private Map<String, Map<String, Integer>> webResultData; // cache
 	private Map<String, Map<String, Integer>> fileResultData; // cache
-	Semaphore putResultSemaphore, summarySemaphore, resultSemaphore;
+	Semaphore putResultSemaphore, summarySemaphore, resultSemaphore, endSemaphore;
 	private Map<String, Map<String, Integer>> webResultDataSummary;
 	private Map<String, Map<String, Integer>> fileResultDataSummary;
 	boolean shutdown;
+	int taskRunner;
 	
 
 	public ResultRetrieverThreadPool() {
@@ -34,6 +39,8 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		resultSemaphore = new Semaphore(0); // treba da se odmah zablokira
 		ex = Executors.newFixedThreadPool(10);
 		this.shutdown = false;
+		this.taskRunner = 0;
+		this.endSemaphore = new Semaphore(1);
 	}
 
 	@Override
@@ -53,13 +60,12 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	public void putResult(Map<String, Integer> result, Type type, String key) {
 		try {
 			putResultSemaphore.acquire();
-			if (type.equals("WEB")) {
+			if (type.equals(Type.WEB)) {
 				webResultData.put(key, result);
 			} else {
 				fileResultData.put(key, result);
 			}
 			putResultSemaphore.release();
-
 
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -83,29 +89,54 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	}
 
 	@Override
-	public Map<String, Integer> getResult(String query) {
-
-		return null;
+	public Map<String, Integer> getResult(String query) throws Exception {
+		
+		String name = CLI.parseName(query);
+		String type = CLI.parseType(query);
+		
+		if (type.equals("web")) {
+			if (!webResultData.containsKey(name)) {
+				 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(webResultData, fileResultData, name, ResultRetrieverTaskType.DOMENSCANER, Type.WEB);
+			     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
+			     Map<String, Map<String, Integer>> result = help.get();
+			     return result.get(name);
+			}
+		   return webResultData.get(name);			
+		} else {
+			if (!fileResultData.containsKey(name)) {
+				return null;
+			}
+		   return fileResultData.get(name);	
+		}
 	}
 
 	@Override
-	public Map<String, Integer> queryResult(String query) throws Exception {
-		if (parseType(query).equals("web")) {
-			while (!webResultData.containsKey(parseName(query))
-					|| webResultData.get(parseName(query)).containsValue(0)) {
-				resultSemaphore.acquire();
-
+	public Map<String, Integer> queryResult(String query) {
+		String name = CLI.parseName(query);
+		String type = CLI.parseType(query);
+		
+		if (type.equals("web")) {
+			if (CLI.wstp.checkIfItsWorking(name)) {
+				System.out.print("This task is currently being resolved");
+				return null;
+			}else {
+				if(!webResultData.containsKey(name)) {
+					System.out.print("There is no info about that web summary");
+					return null;
+				}
 			}
-			return webResultData.get(parseName(query));
-
-		} else if (parseType(query).equals("file")) {
-			while (!fileResultData.containsKey(parseName(query))
-					|| fileResultData.get(parseName(query)).containsValue(0)) {
-				resultSemaphore.acquire();
-			}
-			return fileResultData.get(parseName(query));
+			return webResultData.get(name);
 		} else {
-			throw new NonExistingCommand("Non existing command");
+			if (CLI.fstp.checkIfItsWorking(name)) {
+				System.out.print("This task is currently being resolved");
+				return null;
+			}else {
+				if(fileResultData.isEmpty()) {
+					System.out.print("There is no info about that directory");
+					return null;
+				}
+			}			
+			return fileResultData.get(name);
 		}
 	}
 
@@ -130,25 +161,30 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	public Map<String, Map<String, Integer>> getSummary(String summaryType) {
 		try {
 			if (summaryType.equals("web")) {
-				if (!isFinished(summaryType)) {
-					summarySemaphore.acquire(); // treba da se zablokira jer nije zavrsen summary, cim prodje moze da
-												// vrati
+					if (webResultDataSummary.isEmpty()) {
+					 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(webResultData, fileResultData, null, ResultRetrieverTaskType.SUMMARY, Type.WEB);
+				     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
+				     webResultDataSummary = help.get();
+					}
 					return webResultDataSummary;
-				}
 			} else {
-				if (!isFinished(summaryType)) {
-
-					summarySemaphore.acquire(); // treba da se zablokira jer nije zavrsen summary, cim prodje moze da
-												// vrati
+					if (webResultDataSummary.isEmpty()) {
+						 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(webResultData, fileResultData, null, ResultRetrieverTaskType.SUMMARY, Type.DIRECTORY);
+					     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
+					     fileResultDataSummary = help.get();
+						}
 					return fileResultDataSummary;
-				}
 			}
 
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void releaseSummarySemaphore() {
+		summarySemaphore.release();
 	}
 
 	@Override
@@ -184,28 +220,6 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		// TODO Auto-generated method stub
 
 	}
-
-	public boolean isFinished(String type) {
-		if (type.equals("web")) {
-			Iterator it = webResultData.entrySet().iterator();
-			while (it.hasNext()) {
-				Map<String, Integer> val = (Map<String, Integer>) it.next();
-				if (val.containsValue(0)) {
-					return false;
-				}
-			}
-			return true;
-		} else {
-			Iterator it = fileResultData.entrySet().iterator();
-			while (it.hasNext()) {
-				Map<String, Integer> val = (Map<String, Integer>) it.next();
-				if (val.containsValue(0)) {
-					return false;
-				}
-			}
-			return true;
-		}
-	}
 	
 	public void clearWebResultData() {
 		try {
@@ -216,5 +230,29 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void taskStarted() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner++;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void taskEnded() {
+		try {
+			endSemaphore.acquire();
+			this.taskRunner--;
+			endSemaphore.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

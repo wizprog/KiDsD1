@@ -178,11 +178,11 @@ public class CLI {
 						String name1 = parseName(tokens[1]);
 						String type1 = parseType(tokens[1]);
 						if (name1.equals("summary")) {
-							Map<String, Map<String, Integer>> result = rrtp.querySummary(tokens[1]); 
+							Map<String, Map<String, Integer>> result = rrtp.querySummary(type1); 
 							if (result == null) break;
 							printSummaryMap(result);
 						}else {
-							Map<String, Integer> result = rrtp.queryResult(type1);
+							Map<String, Integer> result = rrtp.queryResult(tokens[1]);
 							if (result == null) break;
 							System.out.println(type1 + ":");
 							printSimpleMap(result);

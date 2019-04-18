@@ -18,10 +18,8 @@ public class JobDispatcher implements Runnable {
 		while(!this.shutdown) {
 			Task t = jobqueue.get();
 			if (t.getType().equals("WEB")) {
-				System.out.println("Job dispatcher found WEB job...");
 				CLI.wstp.putTask(t);
 			} else {
-				System.out.println("Job dispatcher found FILE job...");
 				CLI.fstp.putTask(t);
 			}
 		}

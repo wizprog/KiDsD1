@@ -5,21 +5,24 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import connections.ResultRetrieverTaskType;
+import connections.Type;
 
-public class ResultRetriever implements Callable {
+public class ResultRetriever implements Callable<Map<String, Map<String, Integer>>> {
 
 	Map<String, Map<String, Integer>> webDictResult;
 	Map<String, Map<String, Integer>> fileDictResult;
 	String domainName;
 	ResultRetrieverTaskType type;
+	Type typeWF;
 
 	public ResultRetriever(Map<String, Map<String, Integer>> webDictResult,
-			Map<String, Map<String, Integer>> fileDictResult, String domainName, ResultRetrieverTaskType type) {
+			Map<String, Map<String, Integer>> fileDictResult, String domainName, ResultRetrieverTaskType type, Type typeWF) {
 		super();
 		this.webDictResult = webDictResult;
 		this.fileDictResult = fileDictResult;
 		this.domainName = domainName;
 		this.type = type;
+		this.typeWF = typeWF;
 	}
 	
 	//calculating summary method
@@ -47,7 +50,20 @@ public class ResultRetriever implements Callable {
 		    	return result;
 		    }
 		    else {
-		    	Thread.sleep(1000);
+		    	result = new HashMap<String, Map<String, Integer>>();
+		    	
+		    	if (this.typeWF.equals(Type.WEB)) {
+		    		for (Map.Entry<String, Map<String, Integer>> entry : this.webDictResult.entrySet()) {
+		    		    String key = entry.getKey();
+		    		    result.put(key, entry.getValue());
+		    		} 
+		    	}
+		    	else {
+		    		for (Map.Entry<String, Map<String, Integer>> entry : this.fileDictResult.entrySet()) {
+		    		    String key = entry.getKey();
+		    		    result.put(key, entry.getValue());
+		    		} 
+		    	}
 		    }
 		} catch (Exception e) {
 			e.printStackTrace();
