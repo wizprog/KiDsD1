@@ -90,7 +90,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		
 		if (type.equals("web")) {
 			if (!this.webResultDataDomain.containsKey(name)) {
-				 while(CLI.wstp.checkIfItsWorking(name)) Thread.sleep(500);  //Not a good way to do this but it works
+				 while(CLI.wstp.checkIfItsWorking(name)) Thread.sleep(500);  //Not a good way to do this but it works for now
 				 Callable<Map<String, Map<String, Integer>>> rr = new ResultRetriever(deepCopy(webResultData), deepCopy(fileResultData), name, ResultRetrieverTaskType.DOMENSCANER, Type.WEB);
 			     Future<Map<String, Map<String, Integer>>> help = ex.submit(rr);
 			     Map<String, Map<String, Integer>> result = help.get();
@@ -195,8 +195,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 	}
 	
 	@Override
-	public Map<String, Map<String, Integer>> querySummary(String summaryType) throws Exception{ // obradjuje se samo slucaj kada je
-																				// val==0
+	public Map<String, Map<String, Integer>> querySummary(String summaryType) throws Exception{ 
 		if (summaryType.equals("web")) {
 			if (CLI.wstp.areSomeTasksRunning()) {
 				System.out.print("Some web tasks are running");
