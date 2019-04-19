@@ -58,7 +58,7 @@ public class FileScanner implements Callable<Map<String, Map<String, Integer>>> 
 				finalResult.put(directory.getAbsolutePath(), result);
 			}
 			// Testing purposes
-	        // Thread.sleep(10000);  
+	         Thread.sleep(10000);  
 			CLI.fstp.taskEnded(directoryUrls);
 			return finalResult;
 

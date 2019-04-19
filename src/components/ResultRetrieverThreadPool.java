@@ -98,6 +98,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 			     putResultSemaphore.acquire();
 			     this.webResultDataDomain.put(result.entrySet().iterator().next().getKey(), result.entrySet().iterator().next().getValue());
 			     putResultSemaphore.release();
+			     
 			     return result.get(name);
 			}
 		   return this.webResultDataDomain.get(name);			
@@ -120,15 +121,13 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		
 		if (type.equals("web")) {
 			if (CLI.wstp.checkIfItsWorking(name)) {
-				System.out.print("This task is currently being resolved");
-				return null;
+				throw new CorpusNotComplete("This task/domain is currently being resolved");
 			}else {
-				if(!webResultData.containsKey(name)) {
-					System.out.print("There is no info about that web summary");
-					return null;
+				if(!webResultDataDomain.containsKey(name)) {
+					throw new CorpusDoesNotExist("There is no info about that web domain");
 				}
 			}
-			return webResultData.get(name);
+			return webResultDataDomain.get(name);
 		} else {
 			if (CLI.fstp.checkIfItsWorking(name)) {
 				throw new CorpusNotComplete("That task is now running");
@@ -225,6 +224,7 @@ public class ResultRetrieverThreadPool implements Runnable, ResultInterface {
 		try {
 			putResultSemaphore.acquire();
 			webResultData.clear();
+			webResultDataDomain.clear();
 			putResultSemaphore.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

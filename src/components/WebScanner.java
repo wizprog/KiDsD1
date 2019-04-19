@@ -64,7 +64,7 @@ public class WebScanner implements Callable<Map<String, Map<String, Integer>>> {
 			Map<String, Map<String, Integer>> finalResult = new HashMap<String,  Map<String, Integer>>();
 			finalResult.put(this.url, result);
 			// Testing purposes
-	         Thread.sleep(10000); 
+	        // Thread.sleep(10000); 
 			CLI.wstp.taskEnded(this.url);
 			return finalResult;
 		} catch (IllegalArgumentException e) {

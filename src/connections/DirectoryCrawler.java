@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Semaphore;
 import exceptions.CorpusDoesNotExist;
+import exceptions.NonExistingURLOrDirectory;
 
 public class DirectoryCrawler implements Runnable {
 

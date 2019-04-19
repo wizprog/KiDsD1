@@ -1,0 +1,10 @@
+aw  https://www.ef.com/wwen/english-resources/english-grammar/numbers-english/
+get web|https://www.ef.com
+query web|https://www.ef.com
+
+ad testing
+query file|directorypath
+query file|directorypath
+
+query file|summary
+query web|summary
